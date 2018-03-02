@@ -233,3 +233,4 @@ _Pvt_Extensions
 .fake/
 .vscode/launch.json
 .vscode/tasks.json
+ClientApp/wwwroot/

@@ -14,6 +14,7 @@ import { ContactComponent } from './contact/contact.component';
 import { CurriculumComponent } from './curriculum/curriculum.component';
 import { LoginComponent } from './login/login.component';
 import { ScheduleComponent } from './schedule/schedule.component';
+import { FooterComponent } from './footer/footer.component';
 
 @NgModule({
   declarations: [
@@ -24,7 +25,8 @@ import { ScheduleComponent } from './schedule/schedule.component';
     StudentComponent,
     ContactComponent,
     CurriculumComponent,
-    ScheduleComponent
+    ScheduleComponent,
+    FooterComponent
   ],
   imports: [
     BrowserModule.withServerTransition({ appId: 'ng-cli-universal' }),
