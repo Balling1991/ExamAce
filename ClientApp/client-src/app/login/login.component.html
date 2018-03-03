@@ -1,0 +1,26 @@
+<div class="row">
+    <div class="col-md-4 offset-md-4">
+        <div *ngIf="errorMessage" class="alert alert-warning">{{ errorMessage }}</div>
+        <form (submit)="login()" #form="ngForm" novalidate>
+            <div></div>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" class="form-control" name="username" [(ngModel)]="creds.username" #username="ngModel" required />
+                <div class="text-warning" *ngIf="username.touched && username.invalid && username.errors.required">Username is required</div>
+            </div>
+            <div class="form-group">
+                <label>Password</label>
+                <input type="password" class="form-control" name="password" [(ngModel)]="creds.password" #password="ngModel" required />
+                <div class="text-warning" *ngIf="password.touched && password.invalid && password.errors.required">Password is required</div>
+            </div>
+            <div class="form-group">
+                <input type="checkbox" class="checkbox-inline" />
+                <label>Remember me?</label>
+                <span class="text-warning"></span>
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Login" class="btn btn-success" [disabled]="form.invalid" />
+            </div>
+        </form>
+    </div>
+</div>

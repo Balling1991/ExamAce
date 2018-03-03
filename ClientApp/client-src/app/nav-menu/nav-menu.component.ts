@@ -1,4 +1,5 @@
 import { Component } from '@angular/core';
+import { LoginService } from '../shared/loginService';
 
 @Component({
   selector: 'app-nav-menu',
@@ -6,7 +7,10 @@ import { Component } from '@angular/core';
   styleUrls: ['./nav-menu.component.css']
 })
 export class NavMenuComponent {
+
   isExpanded = false;
+
+  constructor(private loginService: LoginService){}
 
   collapse() {
     this.isExpanded = false;
@@ -15,4 +19,12 @@ export class NavMenuComponent {
   toggle() {
     this.isExpanded = !this.isExpanded;
   }
+
+  isLoggedIn() {
+    return this.loginService.isValid();
+  }
+  
+	logout() {
+		this.loginService.logout();
+    }
 }

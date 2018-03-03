@@ -102,12 +102,13 @@ namespace ExamAce.Controllers
                             _config["Tokens:Issuer"],
                             _config["Tokens:Audience"],
                             claims,
-                            expires: DateTime.UtcNow.AddMinutes(20),
+                            expires: DateTime.UtcNow.AddMinutes(1),
                             signingCredentials: creds
                             );
 
                         var results = new
                         {
+                            username = user.UserName,
                             token = new JwtSecurityTokenHandler().WriteToken(token),
                             expiration = token.ValidTo
                         };
@@ -116,7 +117,6 @@ namespace ExamAce.Controllers
                     }
                 }
             }
-
             return BadRequest();
         }
     }

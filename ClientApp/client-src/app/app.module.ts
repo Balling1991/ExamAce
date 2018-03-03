@@ -16,6 +16,11 @@ import { LoginComponent } from './login/login.component';
 import { ScheduleComponent } from './schedule/schedule.component';
 import { FooterComponent } from './footer/footer.component';
 
+import { DataService } from './shared/dataService';
+import { LoginService } from './shared/loginService';
+import { AuthInterceptor } from './shared/authInterceptor';
+import { AuthGuardService } from './shared/authGuardService';
+
 @NgModule({
   declarations: [
     AppComponent,
@@ -41,7 +46,12 @@ import { FooterComponent } from './footer/footer.component';
       { path: 'schedule', component: ScheduleComponent },
     ])
   ],
-  providers: [],
+  providers: [
+    DataService,
+    LoginService, 
+    AuthInterceptor, 
+    AuthGuardService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

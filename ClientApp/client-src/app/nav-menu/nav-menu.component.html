@@ -1,22 +1,21 @@
 <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
-  <header class="container">
-    <a class="navbar-brand" href="">Exam Ace</a>
-    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <div class="collapse navbar-collapse" id="navbar">
-      <ul class="navbar-nav mr-auto">
-        <li class="nav-item"><a class="nav-link">Home</a></li>
-        <li class="nav-item"><a class="nav-link">Contact</a></li>
-        <li class="nav-item"><a class="nav-link">Student</a></li>
-      </ul>
-      <ul class="navbar-nav">
-        <!-- Insert logic to determine what link to show -->
-        <li class="nav-item"><a class="nav-link float-right">Logout</a></li>
-        <li class="nav-item"><a class="nav-link float-right">Login</a></li>
-
-      </ul>
-    </div>
-  </header>
+    <header class="container">
+        <a class="navbar-brand" href="">Exam Ace</a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+  
+        <div class="collapse navbar-collapse" id="navbar">
+            <ul class="navbar-nav mr-auto">
+                <li class="nav-item"><a class="nav-link" [routerLink]="['']">Home</a></li>
+                <li class="nav-item"><a class="nav-link" [routerLink]="['contact']">Contact</a></li>
+                <li class="nav-item"><a class="nav-link" [routerLink]="['student']">Student</a></li>
+            </ul>
+            <ul class="navbar-nav">
+                <!-- Insert logic to determine what link to show -->
+                <li *ngIf="isLoggedIn()" class="nav-item"><a class="nav-link float-right" (click)="logout()" [routerLink]="['']">Logout</a></li>
+                <li *ngIf="!isLoggedIn()" class="nav-item"><a class="nav-link float-right" [routerLink]="['login']">Login</a></li>
+            </ul> 
+        </div>
+    </header>
 </nav>
