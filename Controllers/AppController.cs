@@ -23,39 +23,5 @@ namespace ExamAce.Controllers
             _repository = repository ?? throw new ArgumentNullException(nameof(repository));
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
-
-        // public IActionResult Index()
-        // {
-        //     return View();
-        // }
-
-        // [HttpGet("contact")]
-        // public IActionResult Contact()
-        // {
-        //     return View();
-        // }
-
-        // [HttpPost("contact")]
-        // public IActionResult Contact(ContactViewModel model)
-        // {
-        //     if (ModelState.IsValid)
-        //     {
-        //         _mailService.SendEmail("test@test.com", model.Subject, $"From:{ model.Name } - { model.Email }, Message: { model.Message }");
-        //         ViewBag.UserMessage = "Mail Sent";
-        //         ModelState.Clear();
-        //     }
-
-        //     return View();
-        // }
-
-        // [HttpGet("student")]
-        // public async Task<IActionResult> Student()
-        // {
-        //     var user = await _userManager.GetUserAsync(HttpContext.User);
-
-        //     var results = _repository.GetStudentsInClassById(user.Id);
-
-        //     return View(results);
-        // }
     }
 }
