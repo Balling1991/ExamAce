@@ -21,7 +21,8 @@ namespace ExamAce.Controllers
         private readonly IMapper _mapper;
         private readonly UserManager<User> _userManager;
 
-        public StudentController(IExamAceRepository repository,
+        public StudentController(
+            IExamAceRepository repository,
             ILogger<StudentController> logger,
             IMapper mapper,
             UserManager<User> userManager)
