@@ -5,6 +5,11 @@ import { Injectable } from "@angular/core";
 @Injectable()
 export class LoginService {
 
+    private username: string = "";
+    private token: string = "";
+    private tokenExpiration: Date;
+
+
     constructor(private http: HttpClient){}
 
     isValid(): boolean {    
@@ -24,15 +29,19 @@ export class LoginService {
         return this.http.post("/account/createtoken", creds)
             .map((result: any) => {
                 let tokenInfo = result;
-                this.createSession(tokenInfo.username, tokenInfo.token, tokenInfo.tokenExpiration);
+                this.username = tokenInfo.username
+                this.token = tokenInfo.token;
+                this.tokenExpiration = tokenInfo.expiration;
+                this.createSession(this.username, this.token, this.tokenExpiration);
                 return true;
             });
     }
 
     private createSession(username, token, tokenExpiration) {
-        localStorage.setItem('userName', username);
-        localStorage.setItem('id_token', token);
-        localStorage.setItem('expires_at', JSON.stringify(tokenExpiration.valueOf()));
+        localStorage.setItem('userName', this.username);
+        localStorage.setItem('id_token', this.token);
+        localStorage.setItem('expires_at', JSON.stringify(this.tokenExpiration.valueOf()));
+
 	}
 
     logout() {
