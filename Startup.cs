@@ -1,19 +1,21 @@
 using AutoMapper;
-using System;
-using System.Text;
-using System.Threading.Tasks;
 using ExamAce.Data;
+using ExamAce.Data.Entities;
+using ExamAce.Data.Providers;
 using ExamAce.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.SpaServices.AngularCli;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
-using ExamAce.Data.Entities;
+using System;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace ExamAce
 {
@@ -33,27 +35,15 @@ namespace ExamAce
         // This method gets called by the runtime. Use this method to add services to the container.
         public void ConfigureServices(IServiceCollection services)
         {
-                        services.AddIdentity<User, Role>(cfg =>
+            services.AddCors(cfg =>
             {
-                cfg.User.RequireUniqueEmail = true;
-            })
-            .AddEntityFrameworkStores<ExamAceContext>();
-
-            services.AddAuthentication()
-                .AddCookie()
-                .AddJwtBearer(cfg =>
+                cfg.AddPolicy("CorsPolicy", builder =>
                 {
-                    cfg.TokenValidationParameters = new TokenValidationParameters()
-                    {
-                        ValidIssuer = _config["Tokens:Issuer"],
-                        ValidAudience = _config["Tokens:Audience"],
-                        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_config["Tokens:Key"]))
-                    };
+                    builder.AllowAnyHeader()
+                    .AllowAnyMethod()
+                    .AllowAnyOrigin()
+                    .AllowCredentials();
                 });
-
-            services.AddDbContext<ExamAceContext>(cfg => 
-            {
-                cfg.UseSqlServer(_config.GetConnectionString("ExamAceConnectionString"));
             });
 
             services.AddAutoMapper();
@@ -68,6 +58,72 @@ namespace ExamAce
                 }
             });
 
+            services.AddAuthorization(options =>
+            {
+                options.AddPolicy("UserManagement", policy => policy.RequireClaim("manage_user"));
+                options.AddPolicy("Admin", policy => policy.RequireClaim("admin"));
+                options.AddPolicy("User", policy => policy.RequireClaim("user"));
+            });
+
+            services.AddIdentity<User, IdentityRole>(cfg =>
+            {
+                cfg.Password.RequireNonAlphanumeric = false;
+                cfg.User.RequireUniqueEmail = true;
+            })
+            .AddEntityFrameworkStores<ExamAceContext>()
+            .AddDefaultTokenProviders();
+
+            services.AddDbContext<ExamAceContext>(cfg =>
+            {
+                cfg.UseSqlServer(_config.GetConnectionString("ExamAceConnectionString"));
+            });
+
+            services.ConfigureApplicationCookie(cfg =>
+            {
+                cfg.Events.OnRedirectToLogin = context =>
+                {
+                    context.Response.Headers["Location"] = context.RedirectUri;
+                    context.Response.StatusCode = 401;
+                    return Task.CompletedTask;
+                };
+            });
+
+            services.AddAuthentication(sharedOptions =>
+            {
+                sharedOptions.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                sharedOptions.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(cfg =>
+            {
+                cfg.RequireHttpsMetadata = false;
+                //cfg.SaveToken = true;
+
+                cfg.TokenValidationParameters = new TokenValidationParameters()
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = Configuration["TokenAuthentication:Issuer"],
+                    ValidAudience = Configuration["TokenAuthentication:Audience"],
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.ASCII.GetBytes(Configuration["TokenAuthentication:SecretKey"]))
+                };
+
+                cfg.Events = new JwtBearerEvents
+                {
+                    OnAuthenticationFailed = context =>
+                    {
+                        Console.WriteLine("OnAuthenticationFailed: " + context.Exception.Message);
+                        return Task.CompletedTask;
+                    },
+                    OnTokenValidated = context =>
+                    {
+                        Console.WriteLine("OnTokenValidated: " + context.SecurityToken);
+                        return Task.CompletedTask;
+                    }
+                };
+            });
+
             // In production, the Angular files will be served from this directory
             services.AddSpaStaticFiles(configuration =>
             {
@@ -76,7 +132,8 @@ namespace ExamAce
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env)
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory,
+            ExamAceContext context, UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
             if (env.IsDevelopment())
             {
@@ -87,8 +144,16 @@ namespace ExamAce
                 app.UseExceptionHandler("/Home/Error");
             }
 
+            app.UseCors("CorsPolicy");
+
+            loggerFactory.AddConsole(Configuration.GetSection("Logging"));
+            loggerFactory.AddDebug();
+
+            ApiDbSeedData.Seed(userManager, roleManager).Wait();
+
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
+            app.UseMiddleware<TokenProviderMiddleware>();
             app.UseAuthentication();
 
             app.UseMvc(routes =>
@@ -100,9 +165,6 @@ namespace ExamAce
 
             app.UseSpa(spa =>
             {
-                // To learn more about options for serving an Angular SPA from ASP.NET Core,
-                // see https://go.microsoft.com/fwlink/?linkid=864501
-
                 spa.Options.SourcePath = "ClientApp";
 
                 if (env.IsDevelopment())
@@ -110,56 +172,6 @@ namespace ExamAce
                     spa.UseProxyToSpaDevelopmentServer("http://localhost:4200");
                 }
             });
-            
-            if (env.IsDevelopment())
-            {
-                using (var scope = app.ApplicationServices.CreateScope())
-                {
-                    var seeder = scope.ServiceProvider.GetService<ExamAceSeeder>();
-
-                    //seeder.Seed().Wait();
-                }
-            }
-            
-            //CreateRoles(serviceProvider).Wait();
-        }
-
-        private async Task CreateRoles(IServiceProvider serviceProvider)
-        {
-            var roleManager = serviceProvider.GetRequiredService<RoleManager<Role>>();
-            var userManager = serviceProvider.GetRequiredService<UserManager<User>>();
-
-            string[] roles = { "Admin", "Teacher", "Student" };
-
-            IdentityResult roleResult;
-
-            foreach (var role in roles)
-            {
-                var roleExist = await roleManager.RoleExistsAsync(role);
-                if(!roleExist)
-                {
-                    roleResult = await roleManager.CreateAsync(new Role(role));
-                }
-            }
-
-            var powerUser = new User
-            {
-                UserName = _config["AppSettings:AdminUserName"],
-                Email = _config["AppSettings:AdminUserEmail"]
-            };
-
-            string userPassword = _config["AppSettings:AdminUserPassword"];
-
-            var user = await userManager.FindByEmailAsync(_config["AppSettings:AdminUserEmail"]);
-
-            if(user == null)
-            {
-                var createPowerUser = await userManager.CreateAsync(powerUser, userPassword);
-                if(createPowerUser.Succeeded)
-                {
-                    await userManager.AddToRoleAsync(powerUser, "Admin");
-                }
-            }
         }
     }
 }

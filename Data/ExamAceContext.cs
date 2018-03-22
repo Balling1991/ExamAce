@@ -4,15 +4,13 @@ using Microsoft.EntityFrameworkCore;
 
 namespace ExamAce.Data
 {
-    public class ExamAceContext : IdentityDbContext<User, Role, int>
+    public class ExamAceContext : IdentityDbContext<User>
     {
         public ExamAceContext(DbContextOptions<ExamAceContext> options)
             : base(options)
         {
         }
 
-        public new DbSet<User> Users { get; set; }
-        public new DbSet<Role> Roles { get; set; }
         public DbSet<Student> Students { get; set; }
         public DbSet<Teacher> Teachers { get; set; }
         public DbSet<Assignment> Assignments { get; set; }

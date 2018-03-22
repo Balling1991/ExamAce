@@ -33,21 +33,21 @@ namespace ExamAce.Controllers
             _userManager = userManager ?? throw new ArgumentNullException(nameof(userManager));
         }
 
-        [HttpGet]
-        public async Task<IActionResult> Get()
-        {
-            try
-            {
-                var user = await _userManager.GetUserAsync(HttpContext.User);
+        //[HttpGet]
+        //public async Task<IActionResult> Get()
+        //{
+        //    try
+        //    {
+        //        var user = await _userManager.GetUserAsync(HttpContext.User);
 
-                return Ok(_repository.GetStudentsInClassById(user.Id));
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError($"Failed to get students: {ex}");
-                return BadRequest("Failed to get students");
-            }
-        }
+        //        return Ok(_repository.GetStudentsInClassById(user.Id));
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError($"Failed to get students: {ex}");
+        //        return BadRequest("Failed to get students");
+        //    }
+        //}
 
         [HttpGet("{id:int}")]
         public ActionResult Get(int id)
