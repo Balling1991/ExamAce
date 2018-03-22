@@ -21,12 +21,11 @@ namespace ExamAce
 {
     public class Startup
     {
-        private readonly IConfiguration _config;
         private readonly IHostingEnvironment _env;
 
         public Startup(IConfiguration configuration, IHostingEnvironment env)
         {
-            _config = configuration;
+            Configuration = configuration;
             _env = env;
         }
 
@@ -75,7 +74,7 @@ namespace ExamAce
 
             services.AddDbContext<ExamAceContext>(cfg =>
             {
-                cfg.UseSqlServer(_config.GetConnectionString("ExamAceConnectionString"));
+                cfg.UseSqlServer(Configuration.GetConnectionString("ExamAceConnectionString"));
             });
 
             services.ConfigureApplicationCookie(cfg =>
@@ -154,6 +153,7 @@ namespace ExamAce
             app.UseStaticFiles();
             app.UseSpaStaticFiles();
             app.UseMiddleware<TokenProviderMiddleware>();
+            app.UseMiddleware<RefreshTokenProviderMiddleware>();
             app.UseAuthentication();
 
             app.UseMvc(routes =>

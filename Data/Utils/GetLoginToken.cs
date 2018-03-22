@@ -26,7 +26,7 @@ namespace ExamAce.Data.Utils
             };
         }
 
-        public static LoginResponseData Execute(User user, ExamAceContext db)
+        public static LoginResponseData Execute(User user, ExamAceContext db, RefreshToken refreshToken = null)
         {
             var options = GetOptions();
             var now = DateTime.UtcNow;
@@ -50,6 +50,20 @@ namespace ExamAce.Data.Utils
                 var role = db.Roles.Single(i => i.Id == userRole.RoleId);
                 claims.Add(new Claim(Extensions.RoleClaimType, role.Name));
             }
+
+            if (refreshToken == null)
+            {
+                refreshToken = new RefreshToken()
+                {
+                    UserId = user.Id,
+                    Token = Guid.NewGuid().ToString("N")
+                };
+                db.InsertNew(refreshToken);
+            }
+
+            refreshToken.IssuedUtc = now;
+            refreshToken.ExpiresUtc = now.Add(options.Expiration);
+            db.SaveChanges();
 
             var jwt = new JwtSecurityToken(
                 issuer: options.Issuer,
